@@ -84,7 +84,7 @@ CI runs all four on every pull request. A change is not done until they all pass
 | Method | Path | Description |
 | --- | --- | --- |
 | `GET` | `/api/health` | Liveness check. |
-| `GET` | `/api/members` | All members with tier, balance, and progress to next tier. |
+| `GET` | `/api/members` | All members with tier, balance, and progress to next tier. Optional filters below. |
 | `GET` | `/api/members/:id` | A single member summary. |
 | `GET` | `/api/members/:id/transactions` | Transaction history, newest first. |
 | `POST` | `/api/members/:id/earn` | Record a qualifying purchase and award points. |
@@ -92,9 +92,17 @@ CI runs all four on every pull request. A change is not done until they all pass
 | `GET` | `/api/rewards/:id` | A single reward. |
 | `GET` | `/api/tiers` | Tier definitions, thresholds, and multipliers. |
 
-Example:
+`GET /api/members` accepts optional filters, combined with AND. `search` matches first name,
+last name, and email case insensitively on partial matches. `tier` may be repeated or comma
+separated and returns members in any of the listed tiers. `minPoints` and `maxPoints` are
+inclusive bounds on the points balance and can be used independently. An unknown tier name or a
+non numeric bound returns `400`.
+
+Examples:
 
 ```bash
+curl 'http://localhost:4000/api/members?search=okafor&tier=Gold&tier=Silver&minPoints=5000'
+
 curl -X POST http://localhost:4000/api/members/mbr-1001/earn \
   -H 'content-type: application/json' \
   -d '{"amountSpent": 84.50, "source": "pos:store-114", "description": "Weekly grocery run"}'

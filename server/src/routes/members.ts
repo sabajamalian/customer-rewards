@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { RewardsStore } from '../data/store.js';
 import {
+  InvalidMemberFilterError,
   InvalidPurchaseError,
   MemberNotFoundError,
   MemberService,
@@ -10,8 +11,23 @@ export function createMemberRouter(store: RewardsStore): Router {
   const router = Router();
   const members = new MemberService(store);
 
-  router.get('/', (_req, res) => {
-    res.json({ members: members.listMembers() });
+  router.get('/', (req, res) => {
+    try {
+      res.json({
+        members: members.listMembers({
+          search: req.query.search,
+          tier: req.query.tier,
+          minPoints: req.query.minPoints,
+          maxPoints: req.query.maxPoints,
+        }),
+      });
+    } catch (error) {
+      if (error instanceof InvalidMemberFilterError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
   });
 
   router.get('/:id', (req, res) => {
