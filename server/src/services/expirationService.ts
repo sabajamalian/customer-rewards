@@ -17,10 +17,15 @@ interface EarnBatch {
   transaction: Transaction;
   remainingPoints: number;
   expiresAt: string;
+  /** Expiry as an instant, so comparisons stay chronological. */
+  expiresAtMs: number;
 }
 
-function expirationDate(occurredAt: string): Date {
+function expirationDate(occurredAt: string): Date | null {
   const date = new Date(occurredAt);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
   date.setUTCFullYear(date.getUTCFullYear() + 1);
   return date;
 }
@@ -42,7 +47,7 @@ export class ExpirationService {
       let memberPointsExpired = 0;
 
       for (const batch of this.remainingEarnBatches(member.id)) {
-        if (batch.expiresAt > asOf.toISOString() || availableBalance === 0) {
+        if (batch.expiresAtMs > asOf.getTime() || availableBalance === 0) {
           continue;
         }
 
@@ -77,11 +82,9 @@ export class ExpirationService {
     const cutoff = new Date(asOf);
     cutoff.setUTCDate(cutoff.getUTCDate() + EXPIRING_SOON_DAYS);
     const futureBatches = this.remainingEarnBatches(memberId).filter(
-      (batch) => batch.expiresAt > asOf.toISOString(),
+      (batch) => batch.expiresAtMs > asOf.getTime(),
     );
-    const expiringSoon = futureBatches.filter(
-      (batch) => batch.expiresAt <= cutoff.toISOString(),
-    );
+    const expiringSoon = futureBatches.filter((batch) => batch.expiresAtMs <= cutoff.getTime());
 
     return {
       expiringSoonPoints: expiringSoon.reduce((total, batch) => total + batch.remainingPoints, 0),
@@ -97,16 +100,23 @@ export class ExpirationService {
 
     return transactions
       .filter((transaction) => transaction.type === 'earn' && transaction.points > 0)
-      .sort(
-        (a, b) => a.occurredAt.localeCompare(b.occurredAt) || a.id.localeCompare(b.id),
+      .map((transaction) => ({ transaction, expiresAt: expirationDate(transaction.occurredAt) }))
+      .filter(
+        (entry): entry is { transaction: Transaction; expiresAt: Date } => entry.expiresAt !== null,
       )
-      .map((transaction) => {
+      .sort(
+        (a, b) =>
+          a.expiresAt.getTime() - b.expiresAt.getTime() ||
+          a.transaction.id.localeCompare(b.transaction.id),
+      )
+      .map(({ transaction, expiresAt }) => {
         const pointsSpent = Math.min(transaction.points, spentPoints);
         spentPoints -= pointsSpent;
         return {
           transaction,
           remainingPoints: transaction.points - pointsSpent,
-          expiresAt: expirationDate(transaction.occurredAt).toISOString(),
+          expiresAt: expiresAt.toISOString(),
+          expiresAtMs: expiresAt.getTime(),
         };
       })
       .filter((batch) => batch.remainingPoints > 0);

@@ -63,6 +63,50 @@ describe('ExpirationService', () => {
     expect(upcoming.nextExpirationAt).not.toBeNull();
   });
 
+  it('spends the oldest earn first so only the newer batch survives', () => {
+    const memberId = 'mbr-1001';
+    // Clear the seeded history so only the batches below are in play.
+    service.expirePoints(new Date('2030-01-01T00:00:00.000Z'));
+
+    store.addTransaction({
+      id: store.nextId('txn'),
+      memberId,
+      type: 'earn',
+      points: 100,
+      source: 'test:purchase',
+      description: 'Older earn',
+      occurredAt: '2030-02-01T00:00:00.000Z',
+    });
+    store.addTransaction({
+      id: store.nextId('txn'),
+      memberId,
+      type: 'earn',
+      points: 200,
+      source: 'test:purchase',
+      description: 'Newer earn',
+      occurredAt: '2030-08-01T00:00:00.000Z',
+    });
+    store.addTransaction({
+      id: store.nextId('txn'),
+      memberId,
+      type: 'redeem',
+      points: -100,
+      source: 'test:redemption',
+      description: 'Redeemed after both earns',
+      occurredAt: '2030-09-01T00:00:00.000Z',
+    });
+
+    // The older batch expires on 2031-02-01, the newer one not until 2031-08-01.
+    const sweep = service.expirePoints(new Date('2031-03-01T00:00:00.000Z'));
+
+    expect(sweep.pointsExpired).toBe(0);
+    expect(
+      store
+        .listTransactions(memberId)
+        .reduce((total, transaction) => total + transaction.points, 0),
+    ).toBe(200);
+  });
+
   it('never drives the spendable balance below zero', () => {
     const memberId = 'mbr-1001';
     const earnedPoints = store

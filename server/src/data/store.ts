@@ -43,6 +43,10 @@ class InMemoryRewardsStore implements RewardsStore {
     this.redemptions = [];
     this.counters = new Map();
 
+    for (const transaction of this.transactions) {
+      this.rememberId(transaction.id);
+    }
+
     for (const member of this.members.values()) {
       member.lifetimePoints = this.transactions
         .filter((txn) => txn.memberId === member.id && txn.points > 0)
@@ -110,6 +114,25 @@ class InMemoryRewardsStore implements RewardsStore {
     const current = (this.counters.get(prefix) ?? 0) + 1;
     this.counters.set(prefix, current);
     return `${prefix}-${String(current).padStart(5, '0')}`;
+  }
+
+  /**
+   * Keeps the id counters ahead of ids that already exist, so generated ids
+   * never collide with seeded ones.
+   */
+  private rememberId(id: string): void {
+    const separator = id.lastIndexOf('-');
+    if (separator < 1) {
+      return;
+    }
+
+    const prefix = id.slice(0, separator);
+    const sequence = Number(id.slice(separator + 1));
+    if (!Number.isInteger(sequence)) {
+      return;
+    }
+
+    this.counters.set(prefix, Math.max(this.counters.get(prefix) ?? 0, sequence));
   }
 }
 

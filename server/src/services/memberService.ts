@@ -84,6 +84,8 @@ export class MemberService {
       throw new InvalidPurchaseError('source is required');
     }
 
+    const occurredAt = this.normalizeOccurredAt(input.occurredAt);
+
     const multiplier = this.tierService.multiplierFor(member.lifetimePoints);
     const points = Math.floor(input.amountSpent * multiplier);
 
@@ -94,7 +96,7 @@ export class MemberService {
       points,
       source: input.source.trim(),
       description: input.description?.trim() || 'Qualifying purchase',
-      occurredAt: input.occurredAt ?? new Date().toISOString(),
+      occurredAt,
     });
 
     this.store.updateMember({
@@ -103,6 +105,23 @@ export class MemberService {
     });
 
     return { member: this.summarize(memberId), transaction };
+  }
+
+  /**
+   * Rejects a timestamp the rest of the system could not parse, so an earn is
+   * never written with an `occurredAt` that later breaks expiration.
+   */
+  private normalizeOccurredAt(occurredAt: string | undefined): string {
+    if (occurredAt === undefined) {
+      return new Date().toISOString();
+    }
+
+    const parsed = new Date(occurredAt);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new InvalidPurchaseError('occurredAt must be a valid ISO 8601 date');
+    }
+
+    return parsed.toISOString();
   }
 
   private summarize(memberId: string): MemberSummary {
