@@ -2,6 +2,7 @@ import cors from 'cors';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import type { RewardsStore } from './data/store.js';
 import { store as defaultStore } from './data/store.js';
+import { createMaintenanceRouter } from './routes/maintenance.js';
 import { createMemberRouter } from './routes/members.js';
 import { createRewardRouter } from './routes/rewards.js';
 import { createTierRouter } from './routes/tiers.js';
@@ -16,6 +17,7 @@ export function createApp(store: RewardsStore = defaultStore): Express {
     res.json({ status: 'ok', service: 'customer-rewards-api' });
   });
 
+  app.use('/api/maintenance', createMaintenanceRouter(store));
   app.use('/api/members', createMemberRouter(store));
   app.use('/api/rewards', createRewardRouter(store));
   app.use('/api/tiers', createTierRouter(store));

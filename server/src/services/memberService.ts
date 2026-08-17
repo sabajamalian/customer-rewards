@@ -1,5 +1,6 @@
 import type { RewardsStore } from '../data/store.js';
 import type { MemberSummary, Transaction } from '../types/index.js';
+import { ExpirationService } from './expirationService.js';
 import { TierService } from './tierService.js';
 
 export class MemberNotFoundError extends Error {
@@ -26,9 +27,14 @@ export interface EarnPointsInput {
 }
 
 export class MemberService {
+  private readonly expirationService: ExpirationService;
   private readonly tierService: TierService;
 
-  constructor(private readonly store: RewardsStore) {
+  constructor(
+    private readonly store: RewardsStore,
+    private readonly now: () => Date = () => new Date(),
+  ) {
+    this.expirationService = new ExpirationService(store);
     this.tierService = new TierService(store);
   }
 
@@ -104,11 +110,13 @@ export class MemberService {
     if (!member) {
       throw new MemberNotFoundError(memberId);
     }
+    const upcomingExpiration = this.expirationService.getUpcomingExpiration(memberId, this.now());
 
     return {
       ...member,
       tier: this.tierService.tierName(member.lifetimePoints),
       pointsBalance: this.getPointsBalance(memberId),
+      ...upcomingExpiration,
       nextTier: this.tierService.nextTier(member.lifetimePoints)?.name ?? null,
       pointsToNextTier: this.tierService.pointsToNextTier(member.lifetimePoints),
     };

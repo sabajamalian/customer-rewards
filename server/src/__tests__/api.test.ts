@@ -25,6 +25,8 @@ describe('API', () => {
     expect(response.status).toBe(200);
     expect(response.body.members).toHaveLength(8);
     expect(response.body.members[0]).toHaveProperty('tier');
+    expect(response.body.members[0]).toHaveProperty('expiringSoonPoints');
+    expect(response.body.members[0]).toHaveProperty('nextExpirationAt');
   });
 
   it('returns 404 for an unknown member', async () => {
@@ -54,6 +56,26 @@ describe('API', () => {
       .send({ amountSpent: -5, source: 'app:checkout' });
 
     expect(response.status).toBe(400);
+  });
+
+  it('runs the points expiration sweep without double expiring points', async () => {
+    store.addTransaction({
+      id: store.nextId('txn'),
+      memberId: 'mbr-1001',
+      type: 'earn',
+      points: 100,
+      source: 'test:purchase',
+      description: 'Old purchase',
+      occurredAt: '2020-01-01T00:00:00.000Z',
+    });
+
+    const first = await request(app).post('/api/maintenance/expire-points');
+    const second = await request(app).post('/api/maintenance/expire-points');
+
+    expect(first.status).toBe(200);
+    expect(first.body.membersAffected).toBeGreaterThan(0);
+    expect(first.body.pointsExpired).toBeGreaterThanOrEqual(100);
+    expect(second.body).toEqual({ membersAffected: 0, pointsExpired: 0 });
   });
 
   it('lists only active rewards by default', async () => {
