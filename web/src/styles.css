@@ -201,6 +201,12 @@ h2 {
   color: #9fd2f5;
 }
 
+.badge-warning {
+  margin-top: var(--space-2);
+  background: #4a3216;
+  color: #f2bd6f;
+}
+
 .points {
   margin-top: var(--space-3);
   display: flex;

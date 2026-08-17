@@ -16,6 +16,8 @@ export interface MemberSummary {
   lifetimePoints: number;
   tier: TierName;
   pointsBalance: number;
+  expiringSoonPoints: number;
+  nextExpirationAt: string | null;
   nextTier: TierName | null;
   pointsToNextTier: number | null;
 }

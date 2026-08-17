@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, type MemberSummary } from '../api/client';
+import { ExpirationBadge } from '../components/ExpirationBadge';
 import { PointsBalance, formatPoints } from '../components/PointsBalance';
 import { TierBadge } from '../components/TierBadge';
 
@@ -44,6 +45,10 @@ export function MembersPage() {
                   {member.firstName} {member.lastName}
                 </Link>
                 <div className="muted small">{member.email}</div>
+                <ExpirationBadge
+                  points={member.expiringSoonPoints}
+                  expiresAt={member.nextExpirationAt}
+                />
               </td>
               <td>
                 <TierBadge tier={member.tier} />

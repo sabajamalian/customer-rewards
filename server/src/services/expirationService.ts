@@ -76,13 +76,16 @@ export class ExpirationService {
   getUpcomingExpiration(memberId: string, asOf = new Date()): UpcomingExpiration {
     const cutoff = new Date(asOf);
     cutoff.setUTCDate(cutoff.getUTCDate() + EXPIRING_SOON_DAYS);
-    const upcoming = this.remainingEarnBatches(memberId).filter(
-      (batch) => batch.expiresAt > asOf.toISOString() && batch.expiresAt <= cutoff.toISOString(),
+    const futureBatches = this.remainingEarnBatches(memberId).filter(
+      (batch) => batch.expiresAt > asOf.toISOString(),
+    );
+    const expiringSoon = futureBatches.filter(
+      (batch) => batch.expiresAt <= cutoff.toISOString(),
     );
 
     return {
-      expiringSoonPoints: upcoming.reduce((total, batch) => total + batch.remainingPoints, 0),
-      nextExpirationAt: upcoming[0]?.expiresAt ?? null,
+      expiringSoonPoints: expiringSoon.reduce((total, batch) => total + batch.remainingPoints, 0),
+      nextExpirationAt: futureBatches[0]?.expiresAt ?? null,
     };
   }
 

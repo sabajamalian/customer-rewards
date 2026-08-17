@@ -53,6 +53,16 @@ describe('ExpirationService', () => {
     expect(second).toEqual({ membersAffected: 0, pointsExpired: 0 });
   });
 
+  it('reports the next expiration even when no points expire within 30 days', () => {
+    const upcoming = service.getUpcomingExpiration(
+      'mbr-1001',
+      new Date('2020-01-01T00:00:00.000Z'),
+    );
+
+    expect(upcoming.expiringSoonPoints).toBe(0);
+    expect(upcoming.nextExpirationAt).not.toBeNull();
+  });
+
   it('never drives the spendable balance below zero', () => {
     const memberId = 'mbr-1001';
     const earnedPoints = store
