@@ -45,7 +45,7 @@ export function createMemberRouter(store: RewardsStore): Router {
         amountSpent: Number(amountSpent),
         source: String(source ?? ''),
         description,
-        occurredAt,
+        occurredAt: occurredAt === undefined ? undefined : String(occurredAt),
       });
       res.status(201).json(result);
     } catch (error) {

@@ -1,5 +1,6 @@
 import type { RewardsStore } from '../data/store.js';
 import type { MemberSummary, Transaction } from '../types/index.js';
+import { ExpirationService } from './expirationService.js';
 import { TierService } from './tierService.js';
 
 export class MemberNotFoundError extends Error {
@@ -26,9 +27,14 @@ export interface EarnPointsInput {
 }
 
 export class MemberService {
+  private readonly expirationService: ExpirationService;
   private readonly tierService: TierService;
 
-  constructor(private readonly store: RewardsStore) {
+  constructor(
+    private readonly store: RewardsStore,
+    private readonly now: () => Date = () => new Date(),
+  ) {
+    this.expirationService = new ExpirationService(store);
     this.tierService = new TierService(store);
   }
 
@@ -78,6 +84,8 @@ export class MemberService {
       throw new InvalidPurchaseError('source is required');
     }
 
+    const occurredAt = this.normalizeOccurredAt(input.occurredAt);
+
     const multiplier = this.tierService.multiplierFor(member.lifetimePoints);
     const points = Math.floor(input.amountSpent * multiplier);
 
@@ -88,7 +96,7 @@ export class MemberService {
       points,
       source: input.source.trim(),
       description: input.description?.trim() || 'Qualifying purchase',
-      occurredAt: input.occurredAt ?? new Date().toISOString(),
+      occurredAt,
     });
 
     this.store.updateMember({
@@ -99,16 +107,35 @@ export class MemberService {
     return { member: this.summarize(memberId), transaction };
   }
 
+  /**
+   * Rejects a timestamp the rest of the system could not parse, so an earn is
+   * never written with an `occurredAt` that later breaks expiration.
+   */
+  private normalizeOccurredAt(occurredAt: string | undefined): string {
+    if (occurredAt === undefined) {
+      return new Date().toISOString();
+    }
+
+    const parsed = new Date(occurredAt);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new InvalidPurchaseError('occurredAt must be a valid ISO 8601 date');
+    }
+
+    return parsed.toISOString();
+  }
+
   private summarize(memberId: string): MemberSummary {
     const member = this.store.findMember(memberId);
     if (!member) {
       throw new MemberNotFoundError(memberId);
     }
+    const upcomingExpiration = this.expirationService.getUpcomingExpiration(memberId, this.now());
 
     return {
       ...member,
       tier: this.tierService.tierName(member.lifetimePoints),
       pointsBalance: this.getPointsBalance(memberId),
+      ...upcomingExpiration,
       nextTier: this.tierService.nextTier(member.lifetimePoints)?.name ?? null,
       pointsToNextTier: this.tierService.pointsToNextTier(member.lifetimePoints),
     };

@@ -88,6 +88,7 @@ CI runs all four on every pull request. A change is not done until they all pass
 | `GET` | `/api/members/:id` | A single member summary. |
 | `GET` | `/api/members/:id/transactions` | Transaction history, newest first. |
 | `POST` | `/api/members/:id/earn` | Record a qualifying purchase and award points. |
+| `POST` | `/api/maintenance/expire-points` | Expire unspent earn batches older than twelve months. |
 | `GET` | `/api/rewards` | Active reward catalog. Pass `?includeInactive=true` to see everything. |
 | `GET` | `/api/rewards/:id` | A single reward. |
 | `GET` | `/api/tiers` | Tier definitions, thresholds, and multipliers. |

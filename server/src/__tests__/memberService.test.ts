@@ -87,4 +87,41 @@ describe('MemberService', () => {
       service.earnPoints('mbr-nope', { amountSpent: 25, source: 'web:checkout' }),
     ).toThrow(MemberNotFoundError);
   });
+
+  it('rejects an unparseable occurredAt without recording the earn', () => {
+    const before = service.getPointsBalance('mbr-1001');
+    const lifetimeBefore = store.findMember('mbr-1001')!.lifetimePoints;
+
+    expect(() =>
+      service.earnPoints('mbr-1001', {
+        amountSpent: 25,
+        source: 'web:checkout',
+        occurredAt: 'not-a-date',
+      }),
+    ).toThrow(InvalidPurchaseError);
+    expect(service.getPointsBalance('mbr-1001')).toBe(before);
+    expect(store.findMember('mbr-1001')!.lifetimePoints).toBe(lifetimeBefore);
+  });
+
+  it('normalizes a valid occurredAt to an ISO timestamp', () => {
+    const { transaction } = service.earnPoints('mbr-1001', {
+      amountSpent: 25,
+      source: 'web:checkout',
+      occurredAt: '2026-03-01T05:30:00+05:30',
+    });
+
+    expect(transaction.occurredAt).toBe('2026-03-01T00:00:00.000Z');
+  });
+
+  it('generates transaction ids that do not collide with seeded ids', () => {
+    const { transaction } = service.earnPoints('mbr-1001', {
+      amountSpent: 25,
+      source: 'web:checkout',
+    });
+
+    const matches = store
+      .listTransactions()
+      .filter((candidate) => candidate.id === transaction.id);
+    expect(matches).toHaveLength(1);
+  });
 });

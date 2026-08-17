@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, type MemberSummary, type Transaction } from '../api/client';
+import { ExpirationBadge } from '../components/ExpirationBadge';
 import { formatPoints } from '../components/PointsBalance';
 import { TierBadge } from '../components/TierBadge';
 
@@ -34,6 +35,10 @@ export function MemberDetailPage() {
           {member.firstName} {member.lastName}
         </h1>
         <p className="muted">{member.email}</p>
+        <ExpirationBadge
+          points={member.expiringSoonPoints}
+          expiresAt={member.nextExpirationAt}
+        />
       </header>
 
       <div className="card-grid">

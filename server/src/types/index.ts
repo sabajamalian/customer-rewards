@@ -68,6 +68,8 @@ export interface Redemption {
 export interface MemberSummary extends Member {
   tier: TierName;
   pointsBalance: number;
+  expiringSoonPoints: number;
+  nextExpirationAt: string | null;
   nextTier: TierName | null;
   pointsToNextTier: number | null;
 }
