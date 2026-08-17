@@ -27,6 +27,33 @@ describe('API', () => {
     expect(response.body.members[0]).toHaveProperty('tier');
   });
 
+  it('filters the member list by search, tier, and points', async () => {
+    const search = await request(app).get('/api/members?search=okafor');
+    expect(search.status).toBe(200);
+    expect(search.body.members).toHaveLength(1);
+
+    const tiers = await request(app).get('/api/members?tier=Gold&tier=Platinum');
+    expect(tiers.status).toBe(200);
+    expect(
+      tiers.body.members.every((member: { tier: string }) =>
+        ['Gold', 'Platinum'].includes(member.tier),
+      ),
+    ).toBe(true);
+
+    const bounded = await request(app).get('/api/members?minPoints=0&maxPoints=0');
+    expect(bounded.status).toBe(200);
+    expect(bounded.body.members).toHaveLength(0);
+  });
+
+  it('rejects invalid member filters', async () => {
+    const tier = await request(app).get('/api/members?tier=Diamond');
+    expect(tier.status).toBe(400);
+    expect(tier.body.error).toContain('Diamond');
+
+    const bound = await request(app).get('/api/members?minPoints=abc');
+    expect(bound.status).toBe(400);
+  });
+
   it('returns 404 for an unknown member', async () => {
     const response = await request(app).get('/api/members/mbr-nope');
     expect(response.status).toBe(404);
