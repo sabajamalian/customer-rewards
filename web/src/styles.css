@@ -1,0 +1,225 @@
+:root {
+  --bg: #0f1115;
+  --surface: #171a21;
+  --border: #262b36;
+  --text: #e6e8ec;
+  --muted: #9aa3b2;
+  --accent: #4c8dff;
+  --positive: #3fb950;
+  --negative: #f85149;
+  --radius: 10px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 40px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  line-height: 1.5;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.brand {
+  font-weight: 600;
+  margin-right: var(--space-3);
+}
+
+.nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.nav a:hover,
+.nav a.active {
+  color: var(--text);
+}
+
+.content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4);
+}
+
+.page-header {
+  margin-bottom: var(--space-4);
+}
+
+.page-header h1 {
+  margin: 0 0 var(--space-1);
+  font-size: 1.6rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+  margin-top: var(--space-5);
+}
+
+.muted {
+  color: var(--muted);
+  margin: 0;
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+.error {
+  color: var(--negative);
+}
+
+.positive {
+  color: var(--positive);
+}
+
+.negative {
+  color: var(--negative);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.table th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.card-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.card-value {
+  font-size: 1.2rem;
+}
+
+.reward-card {
+  justify-content: space-between;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.badge-bronze {
+  background: #4a3524;
+  color: #e0b184;
+}
+
+.badge-silver {
+  background: #33383f;
+  color: #d5dae2;
+}
+
+.badge-gold {
+  background: #4a3f16;
+  color: #f0d078;
+}
+
+.badge-platinum {
+  background: #23384a;
+  color: #9fd2f5;
+}
+
+.points {
+  margin-top: var(--space-3);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.points-value {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.points-label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.back-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
